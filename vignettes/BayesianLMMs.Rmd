@@ -10,11 +10,24 @@ vignette: >
 ---
 
 ```{r preliminaries,echo=FALSE,cache=FALSE}
-library(rstan)
 library(knitr)
 options(width=92,
         show.signif.stars = FALSE)
 opts_chunk$set(comment=NA, fig.width=8, fig.height=10)
+
+
+
+```
+
+```{r, echo=TRUE}
+print(parallel::detectCores())
+options(mc.cores = parallel::detectCores())
+#Sys.setenv(LOCAL_CPPFLAGS = '-march=native')
+
+
+library(rstan)
+
+
 ```
 
 
@@ -62,12 +75,12 @@ Load, compile, and fit model:
 
 
 ```{r fitmodel1}              
-fixEfFit <- stan(file = "fixEf.stan", 
+fixEfFit <- stan(file = "S1_fixEf.stan", 
                  data = stanDat, 
                  iter = 2000, chains = 4)
 
-save(list="fixEfFit",file="../data/fixEfFit.Rda",
-     compress="xz")
+#save(list="fixEfFit",file="../data/S1_fixEfFit.Rda",
+#     compress="xz")
 ```
 
 ```{r traceplotmodel1}
@@ -152,13 +165,13 @@ stanDat<-list(subj = as.integer(factor(rDat$subj)),
 ```
 
 ```{r compileandfitmodel}
-ranIntFit <- stan(file = "ranInt.stan", data = stanDat, 
+ranIntFit <- stan(file = "S2_ranInt.stan", data = stanDat, 
                   iter = 2000, chains = 4)
 ```
 
 ```{r saveresultsmodel2}
-save(list = "ranIntFit",file = "../data/ranIntFit.Rda",
-     compress = "xz")
+#save(list = "ranIntFit",file = "../data/ranIntFit.Rda",
+#     compress = "xz")
 ```
 
 Examining the posterior distribution:
@@ -189,12 +202,12 @@ $$
 ############################
 
 # 1. Compile and fit model.
-ranIntSlpNoCorFit <- stan(file = "ranIntSlpNoCor.stan", data = stanDat, 
+ranIntSlpNoCorFit <- stan(file = "S3_ranIntSlpNoCor.stan", data = stanDat, 
                      iter = 2000, chains = 4)
 
-save(list = "ranIntSlpNoCorFit",
-     file = "../data/ranIntSlpNoCorFit.Rda",
-     compress = "xz")
+#save(list = "ranIntSlpNoCorFit",
+#     file = "../data/S3_ranIntSlpNoCorFit.Rda",
+#     compress = "xz")
 ```
 
 ```{r}
@@ -223,12 +236,12 @@ $$
 ############################
 
 # 1. Compile and fit model.
-ranIntSlpFit <- stan(file = "ranIntSlp.stan", data = stanDat, 
+ranIntSlpFit <- stan(file = "S4_ranIntSlp.stan", data = stanDat, 
                      iter = 2000, chains = 4)
 
-save(list = "ranIntSlpFit",
-     file = "../data/ranIntSlpFit.Rda",
-     compress = "xz")
+#save(list = "ranIntSlpFit",
+#     file = "../data/S4_ranIntSlpFit.Rda",
+#     compress = "xz")
 ```
 
 ```{r}
@@ -292,12 +305,12 @@ stanDat <- list(N = nrow(X),
                 subj = as.integer(rDat$subj),
                 item = as.integer(rDat$item))
 # 3. Fit the model.
-matrixFit <- stan(file = "matrixModel.stan", data = stanDat,
+matrixFit <- stan(file = "S5_matrixModel.stan", data = stanDat,
                   iter = 2000, chains = 4)
 # 4. Save the result.
-save(list = "matrixFit",
-     file = "../data/matrixFit.Rda",
-     compress = "xz")
+#save(list = "matrixFit",
+#     file = "../data/S5_matrixFit.Rda",
+#     compress = "xz")
 ```
 
 
@@ -315,11 +328,11 @@ save(list = "matrixFit",
 ############################
 
 # 1. Compile and fit model.
-pp <- stan(file = "pp.stan", data = stanDat, 
+pp <- stan(file = "S6_pp.stan", data = stanDat, 
            warmup = 500, iter = 750, chains = 1)
 
-save(list = "pp",file = "../data/pp.Rda",
-     compress = "xz")
+#save(list = "pp",file = "../data/S6_pp.Rda",
+#     compress = "xz")
 ```
 
 Plot correlations between intercepts and slopes for subjects and for items:
@@ -468,12 +481,12 @@ stanDat <- within(list(),
 }
 )
 # 5. Fit the model.
-factorialFit <- stan(file="factorialModel.stan",data=stanDat,
+factorialFit <- stan(file="S7_factorialModel.stan",data=stanDat,
                      iter=2000, chains=4)
 # 6. Save the result.
-save(list="factorialFit",
-     file="../data/factorialFit.Rda",
-     compress="xz")
+#save(list="factorialFit",
+#     file="../data/S7_factorialFit.Rda",
+#     compress="xz")
 ```
 
 
