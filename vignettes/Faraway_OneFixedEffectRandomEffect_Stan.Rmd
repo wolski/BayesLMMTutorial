@@ -1,0 +1,92 @@
+```{r}
+library(ggplot2)
+library(rstan, quietly = TRUE)
+library(reshape2)
+library(dplyr,quietly = TRUE)
+```
+
+```{r}
+data(penicillin, package = "faraway")
+summary(penicillin)
+
+```
+
+# Fit model
+
+```{r}
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+set.seed(123)
+```
+
+
+
+Requires use of STAN command file rbd.stan. We have used uninformative priors for the treatment effects and the two variances. Prepare data in a format consistent with the command file. Needs to be a list.
+
+```{r}
+ntreat <- as.numeric(penicillin$treat)
+blk <- as.numeric(penicillin$blend)
+
+penidat <- list(N = nrow(penicillin), Nt = max(ntreat),
+                Nb = max(blk),
+                treat = ntreat,
+                blk = blk,
+                y = penicillin$yield)
+```
+
+```{r}
+rt <- stanc(file = "rbd.stan")
+sm <- stan_model(stanc_ret  =  rt, verbose = FALSE)
+system.time(fit <- sampling(sm, data = penidat))
+```
+
+
+```{r}
+
+pname <- "sigmablk"
+muc <- rstan::extract(fit, pars = pname,  permuted = FALSE, inc_warmup = FALSE)
+mdf <- melt(muc)
+
+ggplot(mdf,aes(x = iterations, y = value, color = chains)) + geom_line() + ylab(mdf$parameters[1])
+
+```
+
+```{r}
+pname <- "sigmaepsilon"
+muc <- rstan::extract(fit, pars = pname,  permuted = FALSE, inc_warmup = FALSE)
+mdf <- melt(muc)
+ggplot(mdf,aes(x = iterations, y = value, color = chains)) + geom_line() + ylab(mdf$parameters[1])
+```
+
+```{r}
+print(fit, pars = c("trt","sigmablk","sigmaepsilon","bld"))
+```
+
+
+# Posterior Distributions
+
+```{r}
+postsig <- rstan::extract(fit, pars = c("sigmablk","sigmaepsilon"))
+ref <- melt(postsig,value.name = "yield")
+ggplot(data = ref,aes(x = yield, color = L1))+
+  geom_density()+
+  guides(color = guide_legend(title = "SD"))
+
+```
+
+```{r}
+
+opre <- rstan::extract(fit, pars = "bld")
+ref <- melt(opre, value.name = "yield")
+ggplot(data = ref,aes(x = yield, color = factor(Var2)))+geom_density()+guides(color = guide_legend(title = "blend"))
+
+```
+
+
+```{r}
+opre <- rstan::extract(fit, pars = "trt")
+ref <- melt(opre, value.name = "yield")
+ref[,2] <- (LETTERS[1:4])[ref[,2]]
+ggplot(data = ref,aes(x = yield, color = factor(Var2)))+geom_density()+guides(color = guide_legend(title = "treatment"))
+
+```
