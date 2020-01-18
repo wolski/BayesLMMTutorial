@@ -1,0 +1,169 @@
+---
+title: 'One fixed effect and one random effect'
+author: "Witold Wolski"
+date: "17/01/2020"
+output: html_document
+---
+
+
+```{r}
+rm(list = ls())
+library(tidyverse)
+library(lme4)
+library(ggplot2)
+options(digits = 5,show.signif.stars = FALSE)
+```
+
+
+```{r}
+data(penicillin, package = "faraway")
+head(penicillin)
+if (FALSE) {
+  penicillin <- readRDS("mb.zip")
+  summary(penicillin)
+  head(penicillin)
+  penicillin <- penicillin %>% rename(yield = transformedIntensity, blend = peptide_Id, treat = dilution.)
+  penicillin <- na.omit(penicillin)
+}
+with(penicillin, table(treat, blend))
+```
+
+```{r}
+ggplot(penicillin,aes(x = blend, y = yield, group = treat, linetype = treat)) +
+  geom_line()
+```
+
+
+```{r}
+ggplot(penicillin,aes(x = treat, y = yield, group = blend, linetype = blend)) + 
+  geom_line()
+```
+
+
+```{r}
+mmod <- lmer(yield ~ treat + (1|blend), penicillin)
+summary(mmod)
+```
+
+
+```{r}
+anova(mmod)
+```
+
+
+## pbkrtest package
+
+```{r}
+library(pbkrtest)
+amod <- lmer(yield ~ treat + (1|blend), penicillin, REML = FALSE)
+nmod <- lmer(yield ~ 1 + (1|blend), penicillin, REML = FALSE)
+KRmodcomp(amod, nmod)
+
+
+```
+
+
+```{r}
+library(parallel)
+nc <- detectCores()
+clus <- makeCluster(rep("localhost", nc))
+
+```
+
+
+```{r}
+
+pmod <- PBmodcomp(amod, nmod, cl = clus)
+summary(pmod)
+```
+
+
+## RLRsim package
+
+```{r}
+
+library(RLRsim)
+pmod <- lmer(yield ~ treat + (1|blend), penicillin, REML = FALSE)
+lmod <- lm(yield ~ treat, penicillin)
+
+exactLRT(pmod, lmod)
+
+```
+
+
+## lmerTest package
+
+```{r}
+library(lmerTest)
+mmod <- lmer(yield ~ treat + (1|blend), penicillin)
+summary(mmod)
+```
+
+```{r}
+difflsmeans(mmod)
+```
+
+
+## MCMCglmm package
+
+```{r}
+
+library(MCMCglmm)
+eprior <- list(R = list(V = 1,nu = 0.02),G = list(G1 = list(V = 1,nu = 0.02,alpha.V = 1000)))
+bmod <- MCMCglmm(yield ~ treat, ~blend, data = penicillin,verbose = FALSE,prior = eprior,pr = TRUE)
+
+lattice::xyplot(bmod$Sol)
+
+```
+
+
+```{r}
+
+lattice::xyplot(log(bmod$VCV))
+
+```
+
+
+```{r}
+summary(bmod)
+```
+
+
+
+```{r}
+library(reshape2)
+ref <- data.frame(bmod$Sol[,2:4])
+rdf <- melt(ref)
+ggplot(rdf, aes(x = value, color = variable)) + geom_density()
+
+```
+
+
+```{r}
+head(bmod$Sol)
+ref <- data.frame(bmod$Sol[,5:9])
+colnames(ref) <- as.character(1:5)
+rdf <- melt(ref)
+colnames(rdf) <- c("blend","yield")
+ggplot(rdf, aes(x = yield, color = blend)) + geom_density()
+
+```
+
+
+```{r}
+hist(sqrt(bmod$VCV[,1]), 50, xlab = "yield", main = "Blend SD")
+```
+
+
+```{r}
+hist(sqrt(bmod$VCV[,2]), 50, xlab = "yield", main="Error SD")
+
+```
+
+
+```{r}
+
+rdf <- data.frame(bmod$VCV)
+ggplot(rdf, aes(x = sqrt(blend),y = sqrt(units))) + geom_density2d() + geom_abline(int = 0, slope = 1)
+
+```

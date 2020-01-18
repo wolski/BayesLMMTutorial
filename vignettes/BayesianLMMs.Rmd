@@ -10,6 +10,7 @@ vignette: >
 ---
 
 ```{r preliminaries,echo=FALSE,cache=FALSE}
+rm(list = ls())
 library(knitr)
 options(width = 92,
         show.signif.stars = FALSE)
@@ -23,11 +24,7 @@ opts_chunk$set(comment = NA, fig.width = 8, fig.height = 10)
 print(parallel::detectCores())
 options(mc.cores = parallel::detectCores())
 #Sys.setenv(LOCAL_CPPFLAGS = '-march=native')
-
-
 library(rstan)
-
-
 ```
 
 
@@ -80,7 +77,6 @@ Load, compile, and fit model:
 fixEfFit <- stan(file = "S1_fixEf.stan", 
                  data = stanDat, 
                  iter = 2000, chains = 4)
-
 #save(list="fixEfFit",file="../data/S1_fixEfFit.Rda",
 #     compress="xz")
 ```
