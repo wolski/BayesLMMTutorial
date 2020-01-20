@@ -1,4 +1,10 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 ```{r}
+#install.packages("faraway")
 library(ggplot2)
 library(rstan, quietly = TRUE)
 library(reshape2)
